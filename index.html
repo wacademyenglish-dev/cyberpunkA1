@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WOLFSTATION: NIGHT CITY</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ws: {
+                            bg: '#050505',
+                            panel: 'rgba(10, 10, 10, 0.85)',
+                            cyberYellow: '#fcee0a', /* The iconic CP2077 yellow */
+                            neonCyan: '#00f0ff',
+                            neonPink: '#ff003c',
+                            danger: '#ff003c'
+                        }
+                    },
+                    fontFamily: {
+                        epic: ['Orbitron', 'sans-serif'],
+                        tech: ['Rajdhani', 'sans-serif'],
+                        code: ['Share Tech Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050505;
+            color: #e2e8f0;
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+            margin: 0;
+            background-image: 
+                radial-gradient(circle at top right, rgba(0, 240, 255, 0.05) 0%, transparent 60%),
+                radial-gradient(circle at bottom left, rgba(252, 238, 10, 0.05) 0%, transparent 60%),
+                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 30px 30px, 30px 30px;
+        }
+
+        /* Scanline Overlay */
+        body::after {
+            content: ''; position: fixed; inset: 0; pointer-events: none;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px; z-index: 100; opacity: 0.5;
+        }
+
+        h1, h2, h3, .font-epic { font-family: 'Orbitron', sans-serif; letter-spacing: 1px; }
+        .font-code { font-family: 'Share Tech Mono', monospace; }
+
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0px); } }
+
+        /* Glitch Effect */
+        .glitch-text { position: relative; display: inline-block; }
+        .glitch-text::before, .glitch-text::after {
+            content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #050505;
+        }
+        .glitch-text::before { left: 2px; text-shadow: -2px 0 #ff003c; clip: rect(24px, 550px, 90px, 0); animation: glitch-anim-2 3s infinite linear alternate-reverse; }
+        .glitch-text::after { left: -2px; text-shadow: -2px 0 #00f0ff; clip: rect(85px, 550px, 140px, 0); animation: glitch-anim 2.5s infinite linear alternate-reverse; }
+        @keyframes glitch-anim { 0% { clip: rect(78px, 9999px, 81px, 0); } 20% { clip: rect(25px, 9999px, 67px, 0); } 40% { clip: rect(54px, 9999px, 20px, 0); } 60% { clip: rect(98px, 9999px, 12px, 0); } 80% { clip: rect(31px, 9999px, 90px, 0); } 100% { clip: rect(10px, 9999px, 5px, 0); } }
+        @keyframes glitch-anim-2 { 0% { clip: rect(65px, 9999px, 100px, 0); } 20% { clip: rect(10px, 9999px, 45px, 0); } 40% { clip: rect(85px, 9999px, 21px, 0); } 60% { clip: rect(13px, 9999px, 67px, 0); } 80% { clip: rect(5px, 9999px, 14px, 0); } 100% { clip: rect(98px, 9999px, 78px, 0); } }
+
+        /* Panels */
+        .ws-panel {
+            background: rgba(10, 10, 12, 0.85);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(0, 240, 255, 0.05);
+            position: relative;
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+        }
+        .ws-panel.yellow-border { border-color: #fcee0a; box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 15px rgba(252, 238, 10, 0.1); }
+        .ws-panel.pink-border { border-color: #ff003c; box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 15px rgba(255, 0, 60, 0.1); }
+
+        /* Buttons */
+        .ws-btn {
+            background: rgba(0, 240, 255, 0.05); 
+            color: #00f0ff; font-family: 'Orbitron', sans-serif; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.1em;
+            border: 1px solid #00f0ff; 
+            padding: 0.75rem 2rem; box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+            transition: all 0.2s; cursor: pointer; position: relative;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        }
+        .ws-btn:hover { background: #00f0ff; color: #000; box-shadow: 0 0 20px rgba(0, 240, 255, 0.6); transform: scale(1.02); }
+        .ws-btn:active { transform: scale(0.98); }
+
+        .ws-btn.yellow { background: #fcee0a; color: #000; border-color: #fcee0a; box-shadow: 0 0 15px rgba(252, 238, 10, 0.4); }
+        .ws-btn.yellow:hover { background: #eab308; box-shadow: 0 0 25px rgba(252, 238, 10, 0.8); color: #000; }
+
+        .ws-btn.dark { background: #0f0f0f; color: #e2e8f0; border-color: #334155; box-shadow: none; }
+        .ws-btn.dark:hover { background: #1e293b; border-color: #fcee0a; color: #fcee0a; }
+
+        /* Level Layout */
+        .level {
+            display: none; opacity: 0; width: 100%; min-height: 100%;
+            flex-direction: column; position: relative; z-index: 10; padding: 1.5rem;
+        }
+        .level.active { display: flex; animation: fadeLevel 0.4s ease-out forwards; }
+        .level.active::before, .level.active::after { content: ''; margin: auto; }
+        
+        .page-content {
+            margin: auto; width: 100%; max-width: 900px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; flex-shrink: 0; padding: 1rem 0;
+        }
+
+        @keyframes fadeLevel { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed; inset: 0; background: #050505; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 1; transition: opacity 0.8s ease-in-out;
+        }
+
+        /* Praise Pop-up */
+        .praise-toast {
+            position: absolute; top: 12%; left: 50%; transform: translate(-50%, 0);
+            background: #fcee0a; color: #000; border: 2px solid #eab308;
+            font-family: 'Orbitron', sans-serif; font-weight: 900;
+            padding: 0.5rem 1.5rem; text-transform: uppercase; letter-spacing: 0.1em;
+            box-shadow: 0 0 20px rgba(252, 238, 10, 0.5);
+            opacity: 0; pointer-events: none; z-index: 101; text-align: center;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        }
+        .toast-anim { animation: toastUp 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes toastUp {
+            0% { transform: translate(-50%, 20px) scale(0.8); opacity: 0; }
+            10% { transform: translate(-50%, 0) scale(1.1); opacity: 1; }
+            15% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+            90% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -20px) scale(0.8); opacity: 0; }
+        }
+
+        /* Damage Red Flash */
+        .damage-overlay { animation: flashBlood 0.5s forwards; }
+        @keyframes flashBlood { 
+            0% { box-shadow: inset 0 0 100px rgba(255,0,60,0.8); background-color: rgba(255,0,60,0.15); } 
+            100% { box-shadow: none; background-color: transparent; } 
+        }
+
+        /* Speaking Starter */
+        .speaking-starter {
+            background: rgba(0, 240, 255, 0.1); border-left: 3px solid #00f0ff;
+            padding: 0.75rem 1rem; border-radius: 0 4px 4px 0; margin-top: 10px;
+            font-family: 'Rajdhani', sans-serif; font-size: 1.1rem; color: #f8fafc; font-weight: bold;
+        }
+
+        /* Class Cards */
+        .class-card {
+            transition: all 0.3s; cursor: pointer; border: 1px solid #334155;
+            background: #0f0f0f; filter: grayscale(100%);
+            clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+        }
+        .class-card:hover { filter: grayscale(0%); transform: translateY(-5px); border-color: #fcee0a; }
+        .class-card.selected { filter: grayscale(0%); border-color: #fcee0a; box-shadow: 0 0 20px rgba(252, 238, 10, 0.3); background: rgba(252, 238, 10, 0.05); }
+
+        /* Kiroshi Scanner Pre-teaching */
+        .scan-node {
+            position: absolute; width: 40px; height: 40px; border: 2px dashed #fcee0a; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            animation: pulseScan 2s infinite; transition: all 0.3s; z-index: 10;
+        }
+        .scan-node:hover { background: rgba(252, 238, 10, 0.2); transform: scale(1.2); }
+        .scan-node.scanned { border: 2px solid #00f0ff; background: rgba(0, 240, 255, 0.2); animation: none; pointer-events: none; }
+        .scan-node::after { content: '+'; color: #fcee0a; font-family: 'Share Tech Mono'; font-weight: bold; font-size: 20px;}
+        .scan-node.scanned::after { content: '✓'; color: #00f0ff; }
+        
+        @keyframes pulseScan { 0% { box-shadow: 0 0 0 0 rgba(252, 238, 10, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(252, 238, 10, 0); } 100% { box-shadow: 0 0 0 0 rgba(252, 238, 10, 0); } }
+
+        /* Sentence Builder */
+        .word-bank-btn { background: #0f0f0f; border: 1px solid #fcee0a; color: #fcee0a; transition: all 0.2s; cursor: pointer; font-family: 'Share Tech Mono', monospace; padding: 0.75rem 1.5rem; font-weight: bold; font-size: 1.2rem;}
+        .word-bank-btn:hover { background: #fcee0a; color: #000; box-shadow: 0 0 15px rgba(252, 238, 10, 0.6); transform: translateY(-2px);}
+        .word-bank-btn.hidden-word { opacity: 0; pointer-events: none; transform: scale(0.8); }
+
+        /* Script Analysis */
+        .script-word {
+            display: inline-block; cursor: pointer; font-weight: bold; color: #00f0ff;
+            border-bottom: 2px dashed #00f0ff; transition: all 0.2s; padding: 0 4px;
+            position: relative; z-index: 20;
+        }
+        .script-word:hover { background-color: rgba(0, 240, 255, 0.1); border-bottom-style: solid; transform: scale(1.05); }
+        .script-word.active-word { background-color: #00f0ff; color: #000; box-shadow: 0 0 10px rgba(0,240,255,0.5); border-radius: 2px;}
+
+        .nav-bar { width: 100%; max-width: 7xl; display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 1rem 0 1rem; flex-shrink: 0; margin-top: auto; z-index: 20; }
+    </style>
+</head>
+<body class="flex flex-col h-screen w-screen selection:bg-ws-cyberYellow selection:text-black">
+
+    <div id="damage-overlay" class="fixed inset-0 pointer-events-none z-[9000] hidden"></div>
+
+    <!-- LOADING SCREEN -->
+    <div id="loading-screen">
+        <div class="relative w-full max-w-sm md:max-w-xl mx-auto mb-8 animate-float flex flex-col items-center">
+            <div class="absolute inset-0 bg-ws-cyberYellow blur-[80px] opacity-20 pointer-events-none"></div>
+            <!-- Cover Image -->
+            <img src="https://cdna.artstation.com/p/assets/images/images/033/037/886/4k/artur-tarnowski-malemain.jpg?1608208334" alt="Cyberpunk 2077" class="relative z-10 w-full h-auto max-h-[30vh] object-cover shadow-[0_0_30px_rgba(252,238,10,0.4)] border border-ws-cyberYellow">
+            <h1 class="text-4xl md:text-6xl font-epic font-black text-ws-cyberYellow mt-8 tracking-widest text-center glitch-text" data-text="CYBERPUNK">CYBERPUNK</h1>
+            <p class="text-xl font-code text-white tracking-[0.4em] mt-2 opacity-80">NIGHT CITY</p>
+        </div>
+        
+        <button id="start-btn" onclick="pressStart()" class="font-epic text-xl font-bold text-black bg-ws-cyberYellow px-12 py-4 hover:bg-yellow-400 transition-all uppercase tracking-widest z-20 shadow-[0_0_20px_rgba(252,238,10,0.6)]" style="clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);">Jack In</button>
+        
+        <div id="loading-ui" class="hidden flex-col items-center mt-6 z-20">
+            <i class="fas fa-circle-notch text-ws-cyberYellow text-4xl mb-4 animate-spin"></i>
+            <p class="font-code text-ws-cyberYellow tracking-widest uppercase text-sm animate-pulse mb-3 drop-shadow-md">> Establishing neural link...</p>
+            <p class="font-tech text-gray-400 text-sm border border-gray-800 p-3 bg-black/80 max-w-sm text-center">Level A1: Absolute Beginner. Present Continuous.</p>
+        </div>
+    </div>
+
+    <!-- PRAISE SYSTEM -->
+    <div id="praise-toast" class="praise-toast">
+        <span id="praise-icon" class="mr-2">💾</span> <span id="praise-text">DATA SAVED</span>
+    </div>
+
+    <!-- DM TOOLS (NCPD DISPATCH) -->
+    <div id="dm-tools" class="fixed top-[80px] left-4 z-50">
+        <button onclick="toggleTools()" class="bg-black text-ws-neonCyan w-12 h-12 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.4)] hover:scale-110 transition border border-ws-neonCyan" style="clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);">
+            <i class="fas fa-shield-alt text-xl"></i>
+        </button>
+        <div id="tools-panel" class="absolute top-14 left-0 ws-panel p-6 w-80 hidden flex-col gap-4 border-l-4 border-l-ws-neonCyan">
+            <h3 class="font-epic text-ws-neonCyan text-lg tracking-widest border-b border-cyan-900 pb-2 text-center">NCPD DISPATCH</h3>
+            
+            <div class="grid grid-cols-2 gap-2 mt-2">
+                <button onclick="addXP(10)" class="ws-btn dark !border-ws-neonCyan !text-ws-neonCyan py-2 text-sm text-center">+$10 EDDIES</button>
+                <button onclick="addXP(50)" class="ws-btn dark !border-ws-neonCyan !text-ws-neonCyan py-2 text-sm text-center">+$50 EDDIES</button>
+            </div>
+            
+            <button onclick="damageArmor()" class="bg-red-900/50 border border-red-500 text-red-400 hover:bg-red-600 hover:text-white py-3 text-sm flex items-center justify-center gap-2 mt-2 font-epic transition-colors" style="clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);">
+                <i class="fas fa-biohazard"></i> INFLICT DAMAGE
+            </button>
+        </div>
+    </div>
+
+    <!-- TOP HUD -->
+    <header class="h-16 shrink-0 bg-black/90 backdrop-blur-md border-b-2 border-ws-cyberYellow z-40 flex items-center justify-between px-4 md:px-8 relative shadow-lg">
+        <div class="flex items-center gap-4 md:gap-6">
+            <!-- HP (Threat Level) -->
+            <div class="bg-black/80 px-4 py-2 border border-gray-800 flex items-center gap-2" style="clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);">
+                <i class="fas fa-heart text-ws-danger text-lg drop-shadow-[0_0_5px_#ff003c]" id="hp-1"></i>
+                <i class="fas fa-heart text-ws-danger text-lg drop-shadow-[0_0_5px_#ff003c]" id="hp-2"></i>
+                <i class="fas fa-heart text-ws-danger text-lg drop-shadow-[0_0_5px_#ff003c]" id="hp-3"></i>
+            </div>
+            <div class="flex flex-col hidden sm:flex">
+                <span class="text-[9px] text-gray-500 font-epic tracking-widest uppercase font-bold">Mercenary</span>
+                <span id="hud-player-name" class="text-xs text-ws-cyberYellow font-bold font-code uppercase tracking-wider">V [Unknown]</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 md:gap-4">
+            <!-- Eurodollars (XP) -->
+            <div class="flex items-center gap-2 bg-black/80 px-4 py-2 border border-ws-neonCyan/30 hidden lg:flex" style="clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);">
+                <i class="fas fa-euro-sign text-ws-neonCyan drop-shadow-[0_0_5px_#00f0ff]"></i>
+                <span id="xp-counter" class="font-code text-lg text-white tracking-widest">0 ED</span>
+            </div>
+            
+            <button onclick="toggleFullscreen()" class="font-code text-[10px] md:text-xs font-bold text-gray-400 hover:text-white transition-colors uppercase tracking-widest hidden sm:block border border-gray-800 px-3 py-1.5 hover:border-gray-500">
+                [ FS ]
+            </button>
+
+            <button onclick="toggleNotes()" class="font-epic text-[10px] md:text-xs font-bold ws-btn py-1.5 px-4">
+                DATAPAD
+            </button>
+        </div>
+    </header>
+
+    <!-- WHITEBOARD (DATAPAD) -->
+    <div id="notes-panel" class="fixed top-16 bottom-0 right-0 w-full max-w-sm bg-black/95 backdrop-blur-2xl border-l-2 border-ws-cyberYellow z-50 translate-x-full flex flex-col shadow-[-10px_0px_30px_rgba(0,0,0,0.8)] transition-transform duration-400 text-white">
+        <div class="p-4 border-b border-gray-800 bg-[#0f0f0f] flex justify-between items-center shrink-0">
+            <h2 class="font-bold uppercase tracking-widest text-sm md:text-base flex items-center gap-2 text-ws-cyberYellow font-epic drop-shadow-sm">
+                <i class="fas fa-terminal"></i> Personal Logs
+            </h2>
+            <button onclick="toggleNotes()" class="text-gray-500 hover:text-white font-black text-2xl px-2 transition-colors">✕</button>
+        </div>
+        <div class="flex-1 w-full p-4 overflow-hidden flex flex-col bg-[#050505]">
+            <p class="text-[10px] font-code text-ws-neonCyan uppercase tracking-widest mb-2 px-1">> Input grammar notes here...</p>
+            <textarea id="class-notes" class="flex-1 w-full bg-black/50 text-white border border-gray-800 outline-none p-4 font-code text-base leading-relaxed resize-none placeholder-gray-700 focus:border-ws-cyberYellow transition-colors" placeholder="Type here..."></textarea>
+        </div>
+    </div>
+
+    <main class="flex-1 w-full relative z-10 overflow-y-auto scroll-smooth pt-4 pb-16 double-click-area">
+        <div class="w-full h-full relative" id="levels-container">
+            
+            <!-- PAGE 1: TEACHER'S GUIDE -->
+            <section class="level active">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-neonCyan">Fixer's Guide</h2>
+                    <h1 class="text-4xl md:text-6xl font-epic font-black text-white mb-6 tracking-tight">Mission Briefing</h1>
+                    
+                    <div class="ws-panel p-8 max-w-2xl w-full text-lg leading-relaxed text-gray-300 text-left border-l-4 border-ws-cyberYellow">
+                        <p class="mb-4 font-bold text-xl border-b border-gray-700 pb-3 text-white uppercase font-epic flex items-center gap-3">
+                            <span class="text-2xl text-ws-cyberYellow">⚠️</span> Target: Absolute Beginner (A1).
+                        </p>
+                        <p class="mb-5 font-tech text-xl">Welcome to Night City. The language here is very visual. We will use a slow-motion trailer to teach students how to describe actions happening right now.</p>
+                        <div class="bg-black/50 p-5 border border-gray-800 shadow-inner">
+                            <h3 class="font-epic uppercase text-sm mb-3 text-ws-neonCyan tracking-widest font-bold">Skill Tree:</h3>
+                            <ul class="list-none pl-1 space-y-3 font-tech text-lg">
+                                <li class="flex items-center gap-3"><span class="text-xl text-ws-cyberYellow">👁️</span> <strong>Present Continuous:</strong> Verb To Be + ING (Am/Is/Are).</li>
+                                <li class="flex items-center gap-3"><span class="text-xl text-ws-neonPink">🔫</span> <strong>Urban Vocab:</strong> Police, Gun, Rain, Street.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <div class="w-32"></div>
+                    <button onclick="nextPage()" class="ws-btn yellow px-10 py-4 text-lg text-black">ENTER NIGHT CITY <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 2: CLASS SELECTION -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic text-4xl md:text-5xl text-white mb-4 text-center tracking-widest drop-shadow-[0_0_15px_rgba(252,238,10,0.4)]">CHOOSE YOUR LIFEPATH</h2>
+                    <p class="text-xl text-gray-400 font-tech text-center mb-10">"Who are you in Night City?"</p>
+                    
+                    <div class="max-w-5xl w-full">
+                        <input type="text" id="player-name-input" placeholder="ENTER ALIAS" class="bg-black/80 border-2 border-ws-neonCyan/50 text-white text-center font-code text-2xl py-4 px-8 uppercase tracking-widest focus:border-ws-cyberYellow outline-none w-full mb-10" style="clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="class-card p-8 text-center" onclick="selectClass('NOMAD', 'fa-car-side', this)">
+                                <i class="fas fa-car-side text-5xl text-ws-cyberYellow mb-4 drop-shadow-md"></i>
+                                <h3 class="font-epic text-2xl text-white mb-2 tracking-widest">NOMAD</h3>
+                                <p class="text-gray-400 font-tech border-t border-gray-700 pt-4 text-lg">You live in the desert.</p>
+                                <p class="text-sm text-gray-500 font-code mt-2">> Freedom and family.</p>
+                            </div>
+                            <div class="class-card p-8 text-center" onclick="selectClass('STREETKID', 'fa-fist-raised', this)">
+                                <i class="fas fa-fist-raised text-5xl text-ws-neonPink mb-4 drop-shadow-md"></i>
+                                <h3 class="font-epic text-2xl text-white mb-2 tracking-widest">STREETKID</h3>
+                                <p class="text-gray-400 font-tech border-t border-gray-700 pt-4 text-lg">You know the city.</p>
+                                <p class="text-sm text-gray-500 font-code mt-2">> Gangs and survival.</p>
+                            </div>
+                            <div class="class-card p-8 text-center" onclick="selectClass('CORPO', 'fa-building', this)">
+                                <i class="fas fa-building text-5xl text-ws-neonCyan mb-4 drop-shadow-md"></i>
+                                <h3 class="font-epic text-2xl text-white mb-2 tracking-widest">CORPO</h3>
+                                <p class="text-gray-400 font-tech border-t border-gray-700 pt-4 text-lg">You are rich and powerful.</p>
+                                <p class="text-sm text-gray-500 font-code mt-2">> Money and control.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button id="btn-confirm-char" onclick="confirmCharacter()" class="ws-btn yellow px-10 py-4 text-lg disabled-btn" disabled>CONFIRM <i class="fas fa-check ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 3: WARM UP 1 (The Future) -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-neonCyan">Warm Up</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold font-epic text-white mb-8 tracking-tight">The Future</h1>
+                    
+                    <div class="ws-panel p-8 max-w-2xl w-full text-center hover:border-ws-neonCyan transition-colors">
+                        <span class="text-6xl mb-6 block drop-shadow-[0_0_15px_#00f0ff]">🏙️</span>
+                        <p class="text-3xl font-bold mb-8 text-white leading-relaxed font-tech">
+                            "Do you think the future will be a good place or a dangerous place?"
+                        </p>
+                        <div class="bg-black/50 p-5 border-l-4 border-ws-neonCyan text-left shadow-inner">
+                            <p class="font-bold text-ws-neonCyan font-code text-xs mb-3 tracking-widest uppercase">🗣️ Speak:</p>
+                            <div class="speaking-starter">"I think the future will be [ good / dangerous ] because..."</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-8 py-4 text-lg">NEXT <i class="fas fa-arrow-right ml-2"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 4: WARM UP 2 (Robots) -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-neonPink">Warm Up</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold font-epic text-white mb-8 tracking-tight">Cyborgs</h1>
+                    
+                    <div class="ws-panel p-8 max-w-2xl w-full text-center hover:border-ws-neonPink transition-colors">
+                        <span class="text-6xl mb-6 block drop-shadow-[0_0_15px_#ff003c]">🦾</span>
+                        <p class="text-3xl font-bold mb-8 text-white leading-relaxed font-tech">
+                            "Would you like to have a robotic arm or robotic eyes in real life?"
+                        </p>
+                        <div class="bg-black/50 p-5 border-l-4 border-ws-neonPink text-left shadow-inner">
+                            <p class="font-bold text-ws-neonPink font-code text-xs mb-3 tracking-widest uppercase">🗣️ Speak:</p>
+                            <div class="speaking-starter !border-ws-neonPink !bg-pink-900/20">"Yes! I would like a robotic [ arm / eye / leg ]."</div>
+                            <div class="speaking-starter !border-ws-neonPink !bg-pink-900/20">"No, I prefer my normal body."</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-8 py-4 text-lg">OPTICS SCAN <i class="fas fa-eye ml-2"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 5: ACTIVE VOCABULARY (Kiroshi Scanner) -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-cyberYellow drop-shadow-md">Kiroshi Optics</h2>
+                    <h1 class="text-4xl md:text-5xl font-bold font-epic text-white mb-6 tracking-tight">Scan the Scene</h1>
+                    <p class="text-lg font-code bg-black/60 px-6 py-3 border border-ws-cyberYellow/30 mb-8 text-gray-300 shadow-inner">Click the anomalies (glitches) to decrypt vocabulary for the video.</p>
+
+                    <div class="ws-panel p-8 md:p-12 w-full max-w-4xl bg-black/80 border-t-4 border-ws-cyberYellow shadow-[0_0_30px_rgba(252,238,10,0.15)] relative">
+                        
+                        <!-- Visual representation of a dark alley -->
+                        <div class="relative w-full h-[300px] border border-gray-800 bg-[url('https://www.transparenttextures.com/patterns/black-scales.png')] overflow-hidden" style="clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);">
+                            <div class="absolute inset-0 bg-blue-900/10"></div>
+                            
+                            <!-- Glitch Nodes -->
+                            <div class="scan-node" style="top: 20%; left: 20%;" onclick="scanNode(this, 'RAIN', 'Water falling from the sky.', 'Do you like the rain?')"></div>
+                            <div class="scan-node" style="top: 60%; left: 50%;" onclick="scanNode(this, 'POLICE', 'People who protect the city.', 'Is the police fast in your city?')"></div>
+                            <div class="scan-node" style="top: 40%; left: 80%;" onclick="scanNode(this, 'GUN', 'A weapon that shoots bullets.', 'Are guns dangerous?')"></div>
+                        </div>
+
+                        <!-- Display Area -->
+                        <div id="scan-display" class="mt-8 bg-black border border-ws-neonCyan/50 p-6 min-h-[120px] flex items-center justify-center hidden shadow-inner text-left relative" style="clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);">
+                            <div class="absolute top-0 left-0 w-full h-1 bg-ws-neonCyan animate-pulse"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button id="btn-scan-next" onclick="nextPage()" class="ws-btn yellow px-10 py-4 text-lg hidden fade-in">NEXT <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 6: PRE-VIDEO WARNING -->
+            <section class="level">
+                <div class="page-content">
+                    <div class="max-w-4xl ws-panel p-16 md:p-20 text-center w-full relative border-t-4 border-ws-cyberYellow">
+                        <i class="fas fa-video text-6xl md:text-7xl text-ws-cyberYellow mb-10 drop-shadow-[0_0_20px_#fcee0a] animate-pulse"></i>
+                        <h2 class="font-epic font-bold text-4xl md:text-5xl text-white mb-8 leading-relaxed tracking-widest uppercase">
+                            Visual Data
+                        </h2>
+                        <p class="text-2xl font-tech text-gray-300 font-bold mb-4">Watch the video. It is in slow motion.</p>
+                        <p class="text-lg text-ws-cyberYellow font-code">> Look at the Police. Look at the girl. Look at the Rain.</p>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-12 py-5 text-xl uppercase">PLAY BRAINDANCE</button>
+                </div>
+            </section>
+
+            <!-- PAGE 7: THE TRAILER -->
+            <section class="level">
+                <div class="page-content w-full max-w-5xl mx-auto flex flex-col justify-center">
+                    <h2 class="font-epic font-bold tracking-[0.2em] mb-2 uppercase text-sm text-ws-neonPink text-center drop-shadow-md">NCPD Archives</h2>
+                    <h1 class="text-3xl md:text-4xl font-bold font-epic uppercase mb-6 text-center text-white">Cyberpunk 2077</h1>
+                    
+                    <div class="w-full aspect-video border-2 border-gray-700 shadow-[0_0_30px_rgba(0,0,0,0.8)] relative shrink-0 bg-black p-1 rounded">
+                        <!-- Teaser Trailer -->
+                        <iframe class="w-full h-full rounded" src="https://www.youtube.com/embed/UnmsqFq4TVc?rel=0" frameborder="0" allowfullscreen></iframe>
+                    </div>
+                </div>
+                <div class="nav-bar !mt-4">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-10 py-4 text-lg">NEXT <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 8: POST-VIDEO IMPRESSIONS -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-neonCyan">Debriefing</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold font-epic text-white mb-8 tracking-tight">Video Impressions</h1>
+                    
+                    <div class="ws-panel p-8 max-w-3xl w-full text-center border-t-4 border-ws-neonCyan">
+                        <span class="text-6xl mb-6 block">🎬</span>
+                        <p class="text-3xl font-bold mb-8 text-white leading-relaxed font-tech">
+                            "What did you see in the video?"
+                        </p>
+                        <div class="bg-black/50 p-5 border-l-4 border-ws-neonCyan text-left shadow-inner">
+                            <p class="font-bold text-ws-neonCyan font-code text-xs mb-3 tracking-widest uppercase">🗣️ Speak:</p>
+                            <div class="speaking-starter">"I saw a [ girl / police / gun ]."</div>
+                            <div class="speaking-starter">"The video is very [ cool / strange / slow ]."</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn yellow px-8 py-4 text-lg">LEARN GRAMMAR <i class="fas fa-book ml-2"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 9: GRAMMAR INTRO (PRESENT CONTINUOUS) -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-cyberYellow">Data Shard</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold font-epic text-white mb-8 tracking-tight">Right Now</h1>
+                    
+                    <div class="ws-panel p-8 max-w-3xl mx-auto w-full text-left shadow-lg border-l-4 border-ws-cyberYellow">
+                        <p class="text-xl font-bold mb-6 text-white font-tech">In English, we use the <strong class="text-ws-cyberYellow">PRESENT CONTINUOUS</strong> to talk about actions happening <strong class="underline">in this exact moment</strong>.</p>
+                        
+                        <div class="bg-black/80 p-6 space-y-5 font-tech shadow-inner border border-gray-700">
+                            <p class="text-sm font-code text-ws-cyberYellow uppercase tracking-widest">> Formula: Person + To Be (am/is/are) + Action + ING</p>
+                            
+                            <div class="border-t border-gray-700 pt-4 mt-4 space-y-4">
+                                <p class="text-3xl text-white font-bold">
+                                    "The girl <span class="text-ws-cyberYellow">is looking</span>."
+                                </p>
+                                <p class="text-3xl text-white font-bold">
+                                    "The rain <span class="text-ws-cyberYellow">is falling</span>."
+                                </p>
+                                <p class="text-3xl text-white font-bold">
+                                    "They <span class="text-ws-cyberYellow">are shooting</span>."
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-12 py-5 text-lg">NEXT <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 10: GRAMMAR INTRO (NEGATIVE & QUESTION) -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-neonPink">Data Shard</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold font-epic text-white mb-8 tracking-tight">Negative & Question</h1>
+                    
+                    <div class="ws-panel p-8 max-w-3xl mx-auto w-full text-left shadow-lg border-l-4 border-ws-neonPink">
+                        
+                        <div class="bg-black/80 p-6 space-y-5 font-tech shadow-inner border border-gray-700">
+                            
+                            <div>
+                                <p class="text-sm font-code text-ws-neonPink uppercase tracking-widest mb-2">> Negative (NOT)</p>
+                                <p class="text-2xl text-white font-bold">
+                                    "She is <span class="text-ws-neonPink">not smiling</span>."
+                                </p>
+                            </div>
+                            
+                            <div class="border-t border-gray-700 pt-4 mt-4">
+                                <p class="text-sm font-code text-ws-neonPink uppercase tracking-widest mb-2">> Question (Invert Am/Is/Are)</p>
+                                <p class="text-2xl text-white font-bold">
+                                    "<span class="text-ws-neonPink">Are</span> they <span class="text-ws-neonPink">shooting</span>?"
+                                </p>
+                                <p class="text-2xl text-white font-bold mt-2">
+                                    "<span class="text-ws-neonPink">Is</span> it <span class="text-ws-neonPink">raining</span>?"
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-12 py-5 text-lg">HACK SYSTEM <i class="fas fa-laptop-code ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 11: TRIAL 1 (CHOOSE IS/ARE) -->
+            <section class="level">
+                <div class="page-content">
+                    <div class="max-w-4xl w-full">
+                        <h2 class="font-epic text-3xl md:text-4xl text-white mb-8 text-center tracking-widest uppercase">System Breach 1</h2>
+                        <div class="ws-panel p-10 md:p-14 w-full text-center bg-black/50 border-t-4 border-t-ws-neonCyan">
+                            <p class="text-xl md:text-2xl text-gray-300 mb-8 font-tech font-bold">Choose the correct verb for "The girl" (She):</p>
+                            <div class="bg-black/80 p-8 border border-gray-700 mb-8 shadow-inner" style="clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);">
+                                <p class="text-2xl md:text-4xl text-white font-bold tracking-wide font-tech">"The girl ________ looking."</p>
+                            </div>
+                            <div class="grid grid-cols-1 gap-4 max-w-xl mx-auto font-epic">
+                                <button onclick="checkTrialAnswer(this, true)" class="ws-btn dark py-5 text-xl text-center">A) is</button>
+                                <button onclick="checkTrialAnswer(this, false)" class="ws-btn dark py-5 text-xl text-center">B) are</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-10 py-4 text-lg">CONTINUE <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 12: TRIAL 2 (CHOOSE IS/ARE PLURAL) -->
+            <section class="level">
+                <div class="page-content">
+                    <div class="max-w-4xl w-full">
+                        <h2 class="font-epic text-3xl md:text-4xl text-white mb-8 text-center tracking-widest uppercase">System Breach 2</h2>
+                        <div class="ws-panel p-10 md:p-14 w-full text-center bg-black/50 border-t-4 border-t-ws-cyberYellow">
+                            <p class="text-xl md:text-2xl text-gray-300 mb-8 font-tech font-bold">Choose the correct verb for "The police" (They):</p>
+                            <div class="bg-black/80 p-8 border border-gray-700 mb-8 shadow-inner" style="clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);">
+                                <p class="text-2xl md:text-4xl text-white font-bold tracking-wide font-tech">"The police ________ shooting."</p>
+                            </div>
+                            <div class="grid grid-cols-1 gap-4 max-w-xl mx-auto font-epic">
+                                <button onclick="checkTrialAnswer(this, false)" class="ws-btn dark py-5 text-xl text-center">A) is</button>
+                                <button onclick="checkTrialAnswer(this, true)" class="ws-btn dark py-5 text-xl text-center">B) are</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-10 py-4 text-lg">CONTINUE <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 13: TRIAL 3 (SENTENCE BUILDER) -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic text-3xl md:text-4xl text-ws-cyberYellow mb-6 text-center tracking-widest uppercase">System Breach 3</h2>
+                    <p class="text-gray-300 text-xl font-tech font-bold mb-8 text-center">Click the words in the correct order to hack the system.</p>
+                    
+                    <div class="ws-panel p-10 w-full max-w-5xl text-center bg-black/60 border border-ws-cyberYellow shadow-[0_0_30px_rgba(252,238,10,0.15)]">
+                        
+                        <!-- Visual -->
+                        <div class="flex justify-center mb-6">
+                            <i class="fas fa-unlock-alt text-6xl text-ws-cyberYellow animate-pulse" id="hack-icon"></i>
+                        </div>
+
+                        <div id="sentence-display" class="min-h-[4rem] border-b-2 border-ws-cyberYellow bg-black/80 mb-10 flex flex-wrap gap-4 items-center justify-center text-3xl font-code font-bold text-white p-4 transition-all"></div>
+
+                        <div id="word-bank" class="flex flex-wrap justify-center gap-4 max-w-3xl mx-auto">
+                            <button class="word-bank-btn" onclick="selectWordBank(this, 'The')">The</button>
+                            <button class="word-bank-btn" onclick="selectWordBank(this, 'police')">police</button>
+                            <button class="word-bank-btn" onclick="selectWordBank(this, 'are')">are</button>
+                            <button class="word-bank-btn" onclick="selectWordBank(this, 'shooting.')">shooting.</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="resetWordBank()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-undo mr-2"></i> Reset</button>
+                    <button onclick="nextPage()" class="ws-btn yellow px-10 py-4 text-lg">CONTINUE <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 14: AUDIO LOG 1 -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-cyberYellow animate-pulse">Audio Intercept</h2>
+                    <h1 class="text-4xl md:text-5xl font-bold font-epic text-white mb-8 tracking-tight">Transmission 01</h1>
+                    
+                    <div class="ws-panel p-8 max-w-2xl w-full text-center mx-auto border-t-4 border-ws-cyberYellow shadow-2xl">
+                        <p class="text-xs tracking-widest mb-6 font-bold uppercase font-code text-gray-500">> Decrypting voice data...</p>
+                        <p class="text-2xl md:text-4xl italic mb-10 font-bold text-white leading-relaxed">"Why do you come here? For <span id="script1-blank" class="border-b-4 border-ws-cyberYellow text-transparent px-6 mx-1 transition-all duration-300">___</span>? For power?"</p>
+                        
+                        <div id="script1-btns" class="flex flex-col sm:flex-row gap-4 w-full">
+                            <button onclick="checkScript(this, true, 'script1-blank', 'fun')" class="ws-btn yellow flex-1 py-4 text-xl">fun</button>
+                            <button onclick="checkScript(this, false, 'script1-blank', 'run')" class="ws-btn dark flex-1 py-4 text-xl">run</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-10 py-4 text-lg">NEXT <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 15: AUDIO LOG 2 -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-neonPink animate-pulse">Audio Intercept</h2>
+                    <h1 class="text-4xl md:text-5xl font-bold font-epic text-white mb-8 tracking-tight">Transmission 02</h1>
+                    
+                    <div class="ws-panel p-8 max-w-2xl w-full text-center mx-auto border-t-4 border-ws-neonPink shadow-2xl">
+                        <p class="text-xs tracking-widest mb-6 font-bold uppercase font-code text-gray-500">> Decrypting voice data...</p>
+                        <p class="text-2xl md:text-4xl italic mb-10 font-bold text-white leading-relaxed">"...you'll make this whole city <span id="script2-blank" class="border-b-4 border-ws-neonPink text-transparent px-6 mx-1 transition-all duration-300">___</span>."</p>
+                        
+                        <div id="script2-btns" class="flex flex-col sm:flex-row gap-4 w-full">
+                            <button onclick="checkScript(this, false, 'script2-blank', 'turn')" class="ws-btn dark flex-1 py-4 text-xl">turn</button>
+                            <button onclick="checkScript(this, true, 'script2-blank', 'burn')" class="ws-btn !border-ws-neonPink !text-ws-neonPink hover:!bg-ws-neonPink hover:!text-black flex-1 py-4 text-xl">burn</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-10 py-4 text-lg">NEXT <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 16: SCRIPT ANALYSIS 1 -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-neonCyan">Datashard Decryption</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold font-epic text-white mb-6 tracking-tight">Script Analysis 1</h1>
+                    <p class="text-lg font-code bg-black/60 px-5 py-2 border border-ws-neonCyan/30 mb-8 text-gray-400 rounded-sm shadow-inner uppercase tracking-widest">Click the blue words to extract the meaning.</p>
+
+                    <div class="flex flex-col lg:flex-row gap-8 w-full max-w-6xl items-start">
+                        <div class="ws-panel p-8 md:p-12 flex-1 border-t-4 border-ws-neonCyan text-left">
+                            <p class="text-2xl md:text-3xl font-tech leading-[2em] text-white">
+                                "Why do you come here? For <span class="script-word" onclick="readScriptWord(this, 'FUN', 'For pleasure or a good time.', 'What do you do for fun on weekends?', 'script1')">fun</span>? For <span class="script-word" onclick="readScriptWord(this, 'POWER', 'Control over people or things.', 'Do you want to have a lot of power in your job?', 'script1')">power</span>? <span class="script-word" onclick="readScriptWord(this, 'LOOKING FOR', 'Trying to find something.', 'What are you looking for in an English class?', 'script1')">Looking for</span> a <span class="script-word" onclick="readScriptWord(this, 'SHOCK', 'A big surprise or sudden change.', 'What was a big shock in your life?', 'script1')">shock</span> to the system?"
+                            </p>
+                        </div>
+                        <div id="script1-panel" class="w-full lg:w-1/3 ws-panel p-6 hidden flex-col border-t-4 border-ws-cyberYellow text-left">
+                            <h3 id="script1-title" class="font-epic text-3xl text-ws-cyberYellow border-b border-ws-cyberYellow/30 pb-2 mb-4">WORD</h3>
+                            <p id="script1-def" class="text-lg font-tech text-gray-300 mb-6 bg-black/40 p-4 rounded-sm border border-gray-700 italic">Definition goes here.</p>
+                            <div class="bg-ws-cyberYellow/10 p-4 border-l-4 border-ws-cyberYellow rounded-sm">
+                                <p class="font-code text-ws-cyberYellow font-bold uppercase tracking-widest text-sm mb-2"><i class="fas fa-comments mr-2"></i> Discuss:</p>
+                                <p id="script1-question" class="text-lg font-tech text-white font-bold">Question goes here.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn yellow px-10 py-4 text-lg text-black">NEXT <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 17: SCRIPT ANALYSIS 2 -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-neonPink">Datashard Decryption</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold font-epic text-white mb-6 tracking-tight">Script Analysis 2</h1>
+                    <p class="text-lg font-code bg-black/60 px-5 py-2 border border-ws-neonPink/30 mb-8 text-gray-400 rounded-sm shadow-inner uppercase tracking-widest">Click the blue words to extract the meaning.</p>
+
+                    <div class="flex flex-col lg:flex-row gap-8 w-full max-w-6xl items-start">
+                        <div class="ws-panel p-8 md:p-12 flex-1 border-t-4 border-ws-neonPink text-left">
+                            <p class="text-2xl md:text-3xl font-tech leading-[2em] text-white">
+                                "Yeah. Because before they <span class="script-word" onclick="readScriptWord(this, 'PUT', 'To place something in a position.', 'Where do you put your keys when you get home?', 'script2')">put</span> a <span class="script-word" onclick="readScriptWord(this, 'BULLET', 'The metal piece fired from a gun.', 'Are guns dangerous in your country?', 'script2')">bullet</span> in you... you'll make this whole city <span class="script-word" onclick="readScriptWord(this, 'BURN', 'To be on fire.', 'Have you ever burned your food while cooking?', 'script2')">burn</span>."
+                            </p>
+                        </div>
+                        <div id="script2-panel" class="w-full lg:w-1/3 ws-panel p-6 hidden flex-col border-t-4 border-ws-cyberYellow text-left">
+                            <h3 id="script2-title" class="font-epic text-3xl text-ws-cyberYellow border-b border-ws-cyberYellow/30 pb-2 mb-4">WORD</h3>
+                            <p id="script2-def" class="text-lg font-tech text-gray-300 mb-6 bg-black/40 p-4 rounded-sm border border-gray-700 italic">Definition goes here.</p>
+                            <div class="bg-ws-cyberYellow/10 p-4 border-l-4 border-ws-cyberYellow rounded-sm">
+                                <p class="font-code text-ws-cyberYellow font-bold uppercase tracking-widest text-sm mb-2"><i class="fas fa-comments mr-2"></i> Discuss:</p>
+                                <p id="script2-question" class="text-lg font-tech text-white font-bold">Question goes here.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn yellow px-10 py-4 text-lg text-black">NEXT <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 18: TRIAL 5 (SENTENCE BUILDER 2) -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic text-3xl md:text-4xl text-ws-cyberYellow mb-6 text-center tracking-widest uppercase">System Breach 5</h2>
+                    <p class="text-gray-300 text-xl font-tech font-bold mb-8 text-center">Click the words in the correct order to hack the system.</p>
+                    
+                    <div class="ws-panel p-10 w-full max-w-5xl text-center bg-black/60 border border-ws-cyberYellow shadow-[0_0_30px_rgba(252,238,10,0.15)]">
+                        
+                        <!-- Visual -->
+                        <div class="flex justify-center mb-6">
+                            <i class="fas fa-unlock-alt text-6xl text-ws-cyberYellow animate-pulse" id="hack-icon-2"></i>
+                        </div>
+
+                        <div id="sentence-display-2" class="min-h-[4rem] border-b-2 border-ws-cyberYellow bg-black/80 mb-10 flex flex-wrap gap-4 items-center justify-center text-3xl font-code font-bold text-white p-4 transition-all"></div>
+
+                        <div id="word-bank-2" class="flex flex-wrap justify-center gap-4 max-w-3xl mx-auto">
+                            <button class="word-bank-btn" onclick="selectWordBank2(this, 'I')">I</button>
+                            <button class="word-bank-btn" onclick="selectWordBank2(this, 'am')">am</button>
+                            <button class="word-bank-btn" onclick="selectWordBank2(this, 'looking')">looking</button>
+                            <button class="word-bank-btn" onclick="selectWordBank2(this, 'for')">for</button>
+                            <button class="word-bank-btn" onclick="selectWordBank2(this, 'power.')">power.</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="resetWordBank2()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-undo mr-2"></i> Reset</button>
+                    <button onclick="nextPage()" class="ws-btn yellow px-10 py-4 text-lg">CONTINUE <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 19: TRIAL 6 (CHOOSE IS/ARE) -->
+            <section class="level">
+                <div class="page-content">
+                    <div class="max-w-4xl w-full">
+                        <h2 class="font-epic text-3xl md:text-4xl text-white mb-8 text-center tracking-widest uppercase">System Breach 6</h2>
+                        <div class="ws-panel p-10 md:p-14 w-full text-center bg-black/50 border-t-4 border-t-ws-neonPink">
+                            <p class="text-xl md:text-2xl text-gray-300 mb-8 font-tech font-bold">Choose the correct verb for "The city" (It):</p>
+                            <div class="bg-black/80 p-8 border border-gray-700 mb-8 shadow-inner" style="clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);">
+                                <p class="text-2xl md:text-4xl text-white font-bold tracking-wide font-tech">"The city ________ burning!"</p>
+                            </div>
+                            <div class="grid grid-cols-1 gap-4 max-w-xl mx-auto font-epic">
+                                <button onclick="checkTrialAnswer(this, true)" class="ws-btn dark py-5 text-xl text-center">A) is</button>
+                                <button onclick="checkTrialAnswer(this, false)" class="ws-btn dark py-5 text-xl text-center">B) are</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-10 py-4 text-lg">CONTINUE <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 20: DISCUSSION (SHOCK TO THE SYSTEM) -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-cyberYellow">Discussion</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold font-epic text-white mb-8 tracking-tight">Shock to the System</h1>
+                    
+                    <div class="ws-panel p-8 max-w-3xl w-full text-center border-t-4 border-ws-cyberYellow">
+                        <span class="text-6xl mb-6 block">⚡</span>
+                        <p class="text-3xl font-bold mb-8 text-white leading-relaxed font-tech">
+                            "What is a big change (a shock) happening in your life right now?"
+                        </p>
+                        <div class="bg-black/50 p-5 border-l-4 border-ws-cyberYellow text-left shadow-inner">
+                            <p class="font-bold text-ws-cyberYellow font-code text-xs mb-3 tracking-widest uppercase">🗣️ Speak:</p>
+                            <div class="speaking-starter !border-ws-cyberYellow !bg-yellow-900/20 !text-ws-cyberYellow">"Right now, I am [ learning English / starting a new job / moving ]."</div>
+                            <div class="speaking-starter !border-ws-cyberYellow !bg-yellow-900/20 !text-ws-cyberYellow">"It is a big shock because..."</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn px-10 py-4 text-lg">NEXT <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 21: ROLEPLAY INTRO -->
+            <section class="level">
+                <div class="page-content">
+                    <div class="w-full max-w-5xl">
+                        <h2 class="text-4xl md:text-6xl font-epic font-black text-ws-neonPink mb-10 text-center tracking-widest drop-shadow-[0_0_15px_rgba(255,0,60,0.5)]">PHASE VI: MAXTAC ARREST</h2>
+                        <div class="ws-panel p-16 w-full text-center border-t-4 border-t-ws-neonPink bg-black/80 relative overflow-hidden">
+                            <i class="fas fa-shield-alt text-9xl text-white/5 absolute -bottom-10 -right-10"></i>
+                            <p class="text-3xl text-white mb-8 leading-relaxed font-tech font-bold uppercase">
+                                "The police are here."
+                            </p>
+                            <p class="text-xl text-gray-400 mb-12 font-code">You are a suspect. The teacher is the police.</p>
+                            <button onclick="nextPage()" class="ws-btn red px-12 py-5 text-2xl">HANDS UP <i class="fas fa-hands ml-4"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <div class="w-32"></div>
+                </div>
+            </section>
+
+            <!-- PAGE 22: ROLEPLAY 1 -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-neonPink animate-pulse">MaxTac Interrogation</h2>
+                    <h1 class="text-4xl md:text-5xl font-bold font-epic text-white mb-8 tracking-tight">The Arrest</h1>
+                    
+                    <div class="flex flex-col md:flex-row gap-6 w-full max-w-5xl mx-auto">
+                        <div class="flex-1 ws-panel p-8 flex flex-col justify-center text-left border-t-4 border-ws-neonPink bg-black/60 shadow-2xl">
+                            <h3 class="text-2xl font-bold mb-2 uppercase text-ws-neonPink font-epic">Teacher</h3>
+                            <p class="text-xs tracking-widest mb-6 font-bold uppercase font-code text-gray-500">Plays: MaxTac Police</p>
+                            <p class="text-2xl italic mb-4 font-bold text-white">"Put your hands up! What are you doing here?"</p>
+                        </div>
+                        
+                        <div class="flex-1 ws-panel p-8 flex flex-col justify-center text-left border-t-4 border-ws-neonCyan shadow-[0_0_20px_rgba(0,240,255,0.15)]">
+                            <h3 class="text-2xl font-bold mb-2 uppercase text-ws-neonCyan font-epic">Student</h3>
+                            <p class="text-xs tracking-widest mb-6 font-bold uppercase font-code text-gray-500">Plays: Suspect</p>
+                            <p class="text-sm font-bold text-gray-400 mb-2 font-tech">Answer (Use Present Continuous):</p>
+                            <p class="text-2xl italic font-bold text-white">"I <span class="text-ws-neonCyan underline decoration-2">am standing</span> here. I <span class="text-ws-neonCyan underline decoration-2">am waiting</span> for a friend!"</p>
+                            
+                            <div class="speaking-starter mt-6">"I am innocent!"</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="addXP(10); nextPage()" class="ws-btn yellow px-10 py-4 text-lg text-black">NEXT <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 23: ROLEPLAY 2 -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-neonPink animate-pulse">MaxTac Interrogation</h2>
+                    <h1 class="text-4xl md:text-5xl font-bold font-epic text-white mb-8 tracking-tight">The Question</h1>
+                    
+                    <div class="flex flex-col md:flex-row gap-6 w-full max-w-5xl mx-auto">
+                        <div class="flex-1 ws-panel p-8 flex flex-col justify-center text-left border-t-4 border-ws-neonPink bg-black/60 shadow-2xl">
+                            <h3 class="text-2xl font-bold mb-2 uppercase text-ws-neonPink font-epic">Teacher</h3>
+                            <p class="text-xs tracking-widest mb-6 font-bold uppercase font-code text-gray-500">Plays: MaxTac Police</p>
+                            <p class="text-2xl italic mb-4 font-bold text-white">"Are you holding a weapon?"</p>
+                        </div>
+                        
+                        <div class="flex-1 ws-panel p-8 flex flex-col justify-center text-left border-t-4 border-ws-cyberYellow shadow-[0_0_20px_rgba(252,238,10,0.15)]">
+                            <h3 class="text-2xl font-bold mb-2 uppercase text-ws-cyberYellow font-epic">Student</h3>
+                            <p class="text-xs tracking-widest mb-6 font-bold uppercase font-code text-gray-500">Plays: Suspect</p>
+                            <p class="text-sm font-bold text-gray-400 mb-2 font-tech">Answer (Use Negative):</p>
+                            <p class="text-2xl italic font-bold text-white">"No, I <span class="text-ws-cyberYellow underline decoration-2">am not holding</span> a weapon!"</p>
+                            
+                            <!-- Class Prompts -->
+                            <div id="prompt-nomad" class="class-speech-prompt hidden mt-6 border-l-4 border-ws-cyberYellow bg-yellow-900/20 p-4 rounded">
+                                <p class="text-ws-cyberYellow font-epic tracking-widest mb-1 text-sm"><i class="fas fa-car-side"></i> NOMAD</p>
+                                <p class="text-white font-tech font-bold text-lg">"I am just looking at my car."</p>
+                            </div>
+                            <div id="prompt-streetkid" class="class-speech-prompt hidden mt-6 border-l-4 border-ws-neonPink bg-pink-900/20 p-4 rounded">
+                                <p class="text-ws-neonPink font-epic tracking-widest mb-1 text-sm"><i class="fas fa-fist-raised"></i> STREETKID</p>
+                                <p class="text-white font-tech font-bold text-lg">"I am living my life, man."</p>
+                            </div>
+                            <div id="prompt-corpo" class="class-speech-prompt hidden mt-6 border-l-4 border-ws-neonCyan bg-cyan-900/20 p-4 rounded">
+                                <p class="text-ws-neonCyan font-epic tracking-widest mb-1 text-sm"><i class="fas fa-building"></i> CORPO</p>
+                                <p class="text-white font-tech font-bold text-lg">"I am calling my lawyer."</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="addXP(10); nextPage()" class="ws-btn yellow px-10 py-4 text-lg text-black">NEXT <i class="fas fa-arrow-right ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 24: HOMEWORK / SIDE QUEST -->
+            <section class="level">
+                <div class="page-content">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-ws-neonPink">Assignment</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold font-epic text-white mb-8 tracking-tight">Data Log</h1>
+                    
+                    <div class="ws-panel p-8 max-w-3xl mx-auto w-full relative bg-black border border-ws-neonPink text-left">
+                        <div class="absolute -top-3 -right-3 bg-ws-neonPink text-white font-bold uppercase tracking-widest px-3 py-1 text-xs font-epic">HOMEWORK</div>
+                        <p class="text-xl font-bold mb-4 text-white font-tech">
+                            "Write 4 sentences describing what your family is doing now."
+                        </p>
+                        <ul class="list-disc pl-5 text-lg font-bold space-y-2 text-gray-400 font-tech">
+                            <li>Write 2 sentences using <strong class="text-ws-neonCyan">Present Continuous (+)</strong> (e.g. "My mother is working.").</li>
+                            <li>Write 2 sentences using <strong class="text-ws-neonPink">Negative (-)</strong> (e.g. "My father is not sleeping.").</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="nav-bar">
+                    <button onclick="prevPage()" class="text-gray-500 hover:text-white uppercase font-epic tracking-widest transition text-sm"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                    <button onclick="nextPage()" class="ws-btn yellow px-12 py-5 text-xl text-black">JACK OUT <i class="fas fa-power-off ml-3"></i></button>
+                </div>
+            </section>
+
+            <!-- PAGE 25: SAVE POINT / RATING -->
+            <section class="level">
+                <div class="page-content items-center text-center">
+                    <h2 class="font-epic font-bold tracking-widest mb-2 uppercase text-sm text-gray-500">System Admin</h2>
+                    <h1 class="text-5xl md:text-7xl font-black font-epic text-white mb-10 tracking-tight glitch-text" data-text="DISCONNECT">DISCONNECT</h1>
+
+                    <div class="space-y-4 max-w-xl w-full text-lg font-bold text-left mb-10 text-gray-300 font-tech">
+                        <label class="flex items-center gap-4 p-4 ws-panel bg-black border border-gray-700">
+                            <input type="checkbox" class="w-5 h-5 accent-ws-cyberYellow" checked disabled>
+                            <span class="mt-1 text-white">Present Continuous Learned.</span>
+                        </label>
+                        <label class="flex items-center gap-4 p-4 ws-panel bg-black border border-gray-700">
+                            <input type="checkbox" class="w-5 h-5 accent-ws-cyberYellow" checked disabled>
+                            <span class="mt-1 text-white">City Vocab Scanned.</span>
+                        </label>
+                    </div>
+
+                    <div class="border-t border-gray-800 pt-8 w-full flex flex-col items-center max-w-2xl mx-auto">
+                        <p class="mb-5 text-lg font-bold text-gray-400 uppercase tracking-widest font-epic">Rate your connection:</p>
+                        <div class="flex justify-center gap-3 md:gap-6 mb-6">
+                            <button onclick="rate(1)" class="game-rating text-5xl grayscale opacity-30 hover:scale-110 transition-transform filter drop-shadow-md">⭐</button>
+                            <button onclick="rate(2)" class="game-rating text-5xl grayscale opacity-30 hover:scale-110 transition-transform filter drop-shadow-md">⭐</button>
+                            <button onclick="rate(3)" class="game-rating text-5xl grayscale opacity-30 hover:scale-110 transition-transform filter drop-shadow-md">⭐</button>
+                            <button onclick="rate(4)" class="game-rating text-5xl grayscale opacity-30 hover:scale-110 transition-transform filter drop-shadow-md">⭐</button>
+                            <button onclick="rate(5)" class="game-rating text-5xl grayscale opacity-30 hover:scale-110 transition-transform filter drop-shadow-md">⭐</button>
+                        </div>
+                        <div id="rat-hub" class="hidden p-3 ws-panel bg-black font-bold text-sm text-center uppercase tracking-widest text-ws-cyberYellow w-max mx-auto font-epic border border-ws-cyberYellow/30">> CONNECTION RATED <span id="star-c" class="text-white mx-2 font-bold text-xl"></span> STARS.</div>
+                        
+                        <button onclick="location.reload();" class="mt-10 ws-btn yellow py-3 px-8 text-lg text-black">
+                            RESTART
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <footer class="fixed bottom-0 left-0 w-full h-10 bg-[#050505] border-t-2 border-[#1e293b] z-40 flex items-center justify-center px-4 md:px-6 transition-colors">
+        <div class="flex-1 flex flex-col items-center justify-center px-4 md:px-12">
+            <div class="flex justify-between w-full max-w-xl mb-1">
+                <span class="text-[10px] font-epic text-gray-500 font-bold tracking-widest uppercase">Progress</span>
+                <span class="text-[10px] font-epic text-white font-bold tracking-widest uppercase">STAGE <span id="level-num" class="text-ws-cyberYellow text-xs mx-1">1</span>/25</span>
+            </div>
+            <div class="w-full max-w-xl bg-gray-900 h-1.5 overflow-hidden border border-gray-700 shadow-inner" style="clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);">
+                <div id="xp-bar" class="h-full bg-ws-cyberYellow w-0 transition-all duration-500 shadow-[0_0_10px_#fcee0a]"></div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- 1. Pagination Logic ---
+        let currentLevel = 0;
+        const levels = document.querySelectorAll('.level');
+        const totalLevels = levels.length; 
+
+        function updateUI() {
+            document.getElementById('level-num').innerText = (currentLevel + 1);
+            const xpBar = document.getElementById('xp-bar');
+            if(totalLevels > 1) xpBar.style.width = `${(currentLevel / (totalLevels - 1)) * 100}%`;
+            
+            const iframes = document.querySelectorAll('iframe');
+            iframes.forEach(iframe => { const src = iframe.src; iframe.src = src; });
+            document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goToLevel(i) {
+            if (i < 0 || i >= totalLevels) return;
+            levels.forEach(l => l.classList.remove('active'));
+            currentLevel = i;
+            levels[currentLevel].classList.add('active');
+            updateUI();
+        }
+
+        function nextPage() { goToLevel(currentLevel + 1); }
+        function prevPage() { goToLevel(currentLevel - 1); }
+
+        document.addEventListener('keydown', (e) => {
+            if(e.key === 'ArrowRight') nextPage();
+            if(e.key === 'ArrowLeft') prevPage();
+        });
+
+        // --- 2. START & TOOLS ---
+        function pressStart() {
+            document.getElementById('start-btn').classList.add('hidden');
+            document.getElementById('loading-ui').classList.remove('hidden');
+            document.getElementById('loading-ui').classList.add('flex');
+            setTimeout(() => {
+                const screen = document.getElementById('loading-screen');
+                screen.style.opacity = '0';
+                setTimeout(() => { screen.style.display = 'none'; }, 800);
+            }, 2000); 
+        }
+
+        function toggleFullscreen() {
+            const doc = window.document;
+            const docEl = doc.documentElement;
+            const req = docEl.requestFullscreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+            const exit = doc.exitFullscreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+            try {
+                if (!doc.fullscreenElement) { req ? req.call(docEl) : null; } 
+                else { exit ? exit.call(doc) : null; }
+            } catch (err) {}
+        }
+
+        function toggleNotes() {
+            const notes = document.getElementById('notes-panel');
+            notes.classList.toggle('translate-x-full');
+        }
+
+        function toggleTools() {
+            const panel = document.getElementById('tools-panel');
+            panel.classList.toggle('hidden');
+            panel.classList.toggle('flex');
+        }
+
+        function triggerPraise(main, icon) {
+            const popup = document.getElementById('praise-toast');
+            document.getElementById('praise-text').innerText = main;
+            document.getElementById('praise-icon').innerText = icon;
+            popup.classList.remove('toast-anim');
+            void popup.offsetWidth; 
+            popup.classList.add('toast-anim');
+        }
+
+        // --- 3. CLASS & XP & HP ---
+        let playerClass = "";
+        let playerName = "Mercenary";
+        let hp = 3;
+        let eddies = 0;
+
+        function selectClass(className, iconClass, btnElement) {
+            document.querySelectorAll('.class-card').forEach(c => c.classList.remove('selected'));
+            btnElement.classList.add('selected');
+            playerClass = className;
+            document.getElementById('btn-confirm-char').disabled = false;
+            document.getElementById('btn-confirm-char').classList.remove('disabled-btn');
+        }
+
+        function confirmCharacter() {
+            const nameInput = document.getElementById('player-name-input').value.trim();
+            if(nameInput) playerName = nameInput;
+            document.getElementById('hud-player-name').innerText = `${playerName} [${playerClass}]`;
+            
+            document.querySelectorAll('.class-speech-prompt').forEach(el => el.classList.add('hidden'));
+            const p = document.getElementById(`prompt-${playerClass.toLowerCase()}`);
+            if(p) p.classList.remove('hidden');
+
+            addXP(10);
+            nextPage();
+        }
+
+        function addXP(amount) {
+            eddies += amount;
+            const xpCounter = document.getElementById('xp-counter');
+            xpCounter.innerText = `${eddies} ED`;
+            xpCounter.classList.add('text-ws-cyberYellow', 'scale-125');
+            setTimeout(() => xpCounter.classList.remove('text-ws-cyberYellow', 'scale-125'), 300);
+        }
+
+        function damageArmor() {
+            if(hp > 0) {
+                const hpIcon = document.getElementById(`hp-${hp}`);
+                if(hpIcon) {
+                    hpIcon.classList.replace('text-ws-danger', 'text-gray-700');
+                    hpIcon.classList.remove('drop-shadow-[0_0_5px_#ff003c]');
+                }
+                hp--;
+            }
+            const overlay = document.getElementById('damage-overlay');
+            overlay.classList.remove('hidden', 'damage-overlay');
+            void overlay.offsetWidth;
+            overlay.classList.add('damage-overlay', 'block');
+            setTimeout(() => overlay.classList.remove('block', 'damage-overlay'), 500);
+        }
+
+        // --- Script Analysis ---
+        function readScriptWord(el, title, desc, question, panelPrefix) {
+            document.querySelectorAll('.script-word').forEach(w => w.classList.remove('active-word'));
+            el.classList.add('active-word');
+            
+            const panel = document.getElementById(panelPrefix + '-panel');
+            document.getElementById(panelPrefix + '-title').innerText = title;
+            document.getElementById(panelPrefix + '-def').innerText = desc;
+            document.getElementById(panelPrefix + '-question').innerText = question;
+            
+            panel.classList.remove('hidden');
+            panel.classList.add('flex', 'fade-in');
+            
+            addXP(5);
+            triggerPraise('DATA EXTRACTED', '🔍');
+        }
+
+        // --- Kiroshi Optics Scanner (Pre-teaching) ---
+        let scannedNodes = 0;
+        function scanNode(el, title, desc, q) {
+            if(el.classList.contains('scanned')) return;
+            el.classList.add('scanned');
+            
+            const display = document.getElementById('scan-display');
+            display.innerHTML = `
+                <div class="absolute top-0 left-0 w-full h-1 bg-ws-neonCyan animate-pulse"></div>
+                <div class="fade-in text-left w-full">
+                    <h3 class="font-epic text-2xl text-ws-neonCyan mb-2 tracking-widest">${title}</h3>
+                    <p class="font-tech font-bold text-lg text-white mb-2">${desc}</p>
+                    <div class="bg-cyan-900/30 border-l-2 border-ws-neonCyan pl-3 mt-2 py-1">
+                        <p class="text-xs text-ws-neonCyan font-bold uppercase tracking-widest">Follow-up:</p>
+                        <p class="font-tech text-base text-gray-300 italic">"${q}"</p>
+                    </div>
+                </div>
+            `;
+            display.classList.remove('hidden');
+            
+            triggerPraise('DATA EXTRACTED', '👁️');
+            addXP(10);
+            scannedNodes++;
+            
+            if(scannedNodes === 3) {
+                document.getElementById('btn-scan-next').classList.remove('hidden');
+            }
+        }
+
+        function checkTrialAnswer(btn, isCorrect) {
+            const siblings = btn.parentElement.children;
+            for(let s of siblings) {
+                s.classList.remove('bg-ws-cyberYellow', 'text-black');
+                s.classList.add('bg-dark', 'text-white');
+            }
+            if(isCorrect) {
+                btn.classList.replace('bg-dark', 'bg-ws-cyberYellow');
+                btn.classList.replace('text-white', 'text-black');
+                addXP(20);
+                triggerPraise('ACCESS GRANTED', '🔓');
+            } else {
+                btn.classList.replace('bg-dark', 'bg-ws-danger');
+                btn.classList.replace('text-white', 'text-white');
+                damageArmor();
+                setTimeout(() => {
+                    btn.classList.replace('bg-ws-danger', 'bg-dark');
+                }, 1000);
+            }
+        }
+
+        // --- Audio Log Script Decryption ---
+        function checkScript(btn, isCorrect, targetId, word) {
+            const container = btn.parentElement;
+            if(isCorrect) {
+                triggerPraise('DATA DECRYPTED', '🔓');
+                const blank = document.getElementById(targetId);
+                blank.classList.remove('text-transparent', 'border-b-4');
+                blank.classList.add('text-ws-cyberYellow', 'drop-shadow-[0_0_8px_#fcee0a]');
+                blank.innerText = word;
+                container.style.display = 'none';
+                addXP(20);
+            } else {
+                triggerPraise('ACCESS DENIED', '🚫');
+                container.classList.add('opacity-30');
+                setTimeout(() => container.classList.remove('opacity-30'), 500);
+                damageArmor();
+            }
+        }
+
+        // --- Braindance Sentence Builder (Anti-Bug Logic) ---
+        let selectedWords = [];
+        const targetSentence = ["The", "police", "are", "shooting."];
+        let isChecking = false;
+
+        function selectWordBank(btn, word) {
+            if (isChecking || btn.classList.contains('hidden-word')) return;
+            
+            selectedWords.push({word: word, btn: btn});
+            btn.classList.add('hidden-word');
+            renderSentence();
+            
+            // Hack icon visual spin
+            const icon = document.getElementById('hack-icon');
+            icon.classList.remove('animate-pulse');
+            icon.classList.add('fa-spin');
+            setTimeout(()=> { icon.classList.remove('fa-spin'); icon.classList.add('animate-pulse'); }, 500);
+
+            let isCorrectSoFar = true;
+            for(let i=0; i<selectedWords.length; i++) {
+                if(selectedWords[i].word !== targetSentence[i]) isCorrectSoFar = false;
+            }
+
+            const display = document.getElementById('sentence-display');
+            
+            if(!isCorrectSoFar) {
+                isChecking = true;
+                display.classList.add('text-ws-danger', 'border-ws-danger');
+                display.classList.replace('text-white', 'text-ws-danger');
+                damageArmor();
+                triggerPraise('ACCESS DENIED', '🚫');
+                
+                setTimeout(() => {
+                    display.classList.remove('text-ws-danger', 'border-ws-danger');
+                    display.classList.replace('text-ws-danger', 'text-white');
+                    resetWordBank();
+                    isChecking = false;
+                }, 800);
+            } else if(selectedWords.length === targetSentence.length) {
+                display.classList.replace('text-white', 'text-ws-neonCyan');
+                display.classList.replace('border-ws-cyberYellow', 'border-ws-neonCyan');
+                display.classList.add('drop-shadow-[0_0_15px_#00f0ff]');
+                
+                icon.classList.replace('fa-unlock-alt', 'fa-unlock');
+                icon.classList.replace('text-ws-cyberYellow', 'text-ws-neonCyan');
+
+                addXP(50);
+                triggerPraise('SYSTEM HACKED', '💻');
+            }
+        }
+
+        function renderSentence() {
+            const display = document.getElementById('sentence-display');
+            if(display) display.innerText = selectedWords.map(sw => sw.word).join(" ");
+        }
+
+        function resetWordBank() {
+            selectedWords.forEach(sw => sw.btn.classList.remove('hidden-word'));
+            selectedWords = [];
+            renderSentence();
+            const display = document.getElementById('sentence-display');
+            if(display) {
+                display.classList.replace('text-ws-neonCyan', 'text-white');
+                display.classList.replace('border-ws-neonCyan', 'border-ws-cyberYellow');
+                display.classList.remove('drop-shadow-[0_0_15px_#00f0ff]');
+                
+                const icon = document.getElementById('hack-icon');
+                icon.classList.replace('fa-unlock', 'fa-unlock-alt');
+                icon.classList.replace('text-ws-neonCyan', 'text-ws-cyberYellow');
+            }
+        }
+
+        // --- Braindance Sentence Builder 2 (System Breach 5) ---
+        let selectedWords2 = [];
+        const targetSentence2 = ["I", "am", "looking", "for", "power."];
+        let isChecking2 = false;
+
+        function selectWordBank2(btn, word) {
+            if (isChecking2 || btn.classList.contains('hidden-word')) return;
+            
+            selectedWords2.push({word: word, btn: btn});
+            btn.classList.add('hidden-word');
+            
+            const display = document.getElementById('sentence-display-2');
+            if(display) display.innerText = selectedWords2.map(sw => sw.word).join(" ");
+            
+            const icon = document.getElementById('hack-icon-2');
+            icon.classList.remove('animate-pulse');
+            icon.classList.add('fa-spin');
+            setTimeout(()=> { icon.classList.remove('fa-spin'); icon.classList.add('animate-pulse'); }, 500);
+
+            let isCorrectSoFar = true;
+            for(let i=0; i<selectedWords2.length; i++) {
+                if(selectedWords2[i].word !== targetSentence2[i]) isCorrectSoFar = false;
+            }
+            
+            if(!isCorrectSoFar) {
+                isChecking2 = true;
+                display.classList.add('text-ws-danger', 'border-ws-danger');
+                display.classList.replace('text-white', 'text-ws-danger');
+                damageArmor();
+                triggerPraise('ACCESS DENIED', '🚫');
+                
+                setTimeout(() => {
+                    display.classList.remove('text-ws-danger', 'border-ws-danger');
+                    display.classList.replace('text-ws-danger', 'text-white');
+                    resetWordBank2();
+                    isChecking2 = false;
+                }, 800);
+            } else if(selectedWords2.length === targetSentence2.length) {
+                display.classList.replace('text-white', 'text-ws-neonCyan');
+                display.classList.replace('border-ws-cyberYellow', 'border-ws-neonCyan');
+                display.classList.add('drop-shadow-[0_0_15px_#00f0ff]');
+                
+                icon.classList.replace('fa-unlock-alt', 'fa-unlock');
+                icon.classList.replace('text-ws-cyberYellow', 'text-ws-neonCyan');
+
+                addXP(50);
+                triggerPraise('SYSTEM HACKED', '💻');
+            }
+        }
+
+        function resetWordBank2() {
+            selectedWords2.forEach(sw => sw.btn.classList.remove('hidden-word'));
+            selectedWords2 = [];
+            const display = document.getElementById('sentence-display-2');
+            if(display) {
+                display.innerText = "";
+                display.classList.replace('text-ws-neonCyan', 'text-white');
+                display.classList.replace('border-ws-neonCyan', 'border-ws-cyberYellow');
+                display.classList.remove('drop-shadow-[0_0_15px_#00f0ff]');
+                
+                const icon = document.getElementById('hack-icon-2');
+                icon.classList.replace('fa-unlock', 'fa-unlock-alt');
+                icon.classList.replace('text-ws-neonCyan', 'text-ws-cyberYellow');
+            }
+        }
+
+        function rate(n) {
+            const drops = document.querySelectorAll('.game-rating');
+            drops.forEach((d, i) => {
+                d.classList.toggle('grayscale', i >= n);
+                d.classList.toggle('opacity-30', i >= n);
+                if(i < n) d.style.filter = "drop-shadow(0 0 10px #fcee0a)";
+                else d.style.filter = "none";
+            });
+            document.getElementById('rat-hub').classList.remove('hidden');
+            document.getElementById('star-c').innerText = n;
+            triggerPraise('RATING SAVED', '✅');
+        }
+
+        const notesTextarea = document.getElementById('class-notes');
+        if(localStorage.getItem('wolfstation_cyber_notes')) notesTextarea.value = localStorage.getItem('wolfstation_cyber_notes');
+        notesTextarea.addEventListener('input', () => localStorage.setItem('wolfstation_cyber_notes', notesTextarea.value));
+        
+        updateUI();
+    </script>
+</body>
+</html>
